@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive 3D view of a BoltzGen-generated target–binder complex.">
+  <title>BoltzGen 1G13 target–binder complex</title>
+  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --page: #07111f;
+      --panel: rgba(12, 26, 44, 0.92);
+      --border: rgba(148, 163, 184, 0.25);
+      --text: #e5edf7;
+      --muted: #9fb0c4;
+      --binder: #f5c84c;
+      --target: #32d5d2;
+      --interface: #ff8b38;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+
+    body { background: var(--page); color: var(--text); }
+
+    header {
+      position: absolute;
+      z-index: 5;
+      top: 0;
+      left: 0;
+      right: 0;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    h1 { margin: 0 0 3px; font-size: 18px; font-weight: 680; }
+    .subtitle { color: var(--muted); font-size: 12px; }
+
+    #controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+    button, a.button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 11px;
+      background: rgba(30, 48, 70, 0.78);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button:hover, a.button:hover { background: rgba(48, 70, 96, 0.95); }
+
+    #viewer { position: absolute; inset: 72px 0 48px; }
+
+    footer {
+      position: absolute;
+      z-index: 5;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 8px 18px;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend { display: inline-flex; align-items: center; white-space: nowrap; }
+    .swatch { width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; }
+    .binder { background: var(--binder); }
+    .target { background: var(--target); }
+    .interface { background: var(--interface); }
+    #status { margin-left: auto; white-space: nowrap; }
+
+    @media (max-width: 850px) {
+      header { align-items: flex-start; }
+      h1 { font-size: 15px; }
+      .subtitle { display: none; }
+      #viewer { inset-top: 72px; }
+      footer { gap: 10px; overflow-x: auto; }
+      footer .help { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>BoltzGen: 1G13 target–binder complex</h1>
+      <div class="subtitle">Known target structure · unknown binder sequence and structure · one generated sample</div>
+    </div>
+    <div id="controls" aria-label="Viewer controls">
+      <button type="button" onclick="showCartoon()">Cartoon</button>
+      <button type="button" onclick="showSticks()">Sticks</button>
+      <button type="button" onclick="toggleSurface()">Surface</button>
+      <button type="button" onclick="toggleSpin()">旋转 / 停止</button>
+      <button type="button" onclick="resetView()">复位</button>
+      <a class="button" href="assets/1g13prot_complex.cif" download>下载 CIF</a>
+      <a class="button" href="https://github.com/OliverWang0908/02741">GitHub</a>
+    </div>
+  </header>
+
+  <main id="viewer" aria-label="Interactive molecular structure"></main>
+
+  <footer>
+    <span class="legend"><span class="swatch binder"></span>Binder：链 A，110 aa</span>
+    <span class="legend"><span class="swatch target"></span>Target：链 B，162 aa</span>
+    <span class="legend"><span class="swatch interface"></span>4 Å interface</span>
+    <span class="help">左拖旋转 · 滚轮缩放 · 右拖平移</span>
+    <span id="status">正在加载结构…</span>
+  </footer>
+
+  <script>
+    const viewer = $3Dmol.createViewer(document.getElementById("viewer"), {
+      backgroundColor: "#07111f",
+      antialias: true
+    });
+
+    const binder = {chain: "A"};
+    const target = {chain: "B"};
+    let spinning = false;
+    let surfaceVisible = false;
+
+    function addInterface() {
+      viewer.addStyle(
+        {chain: "A", within: {distance: 4.0, sel: target}},
+        {stick: {color: "#ff8b38", radius: 0.18}}
+      );
+      viewer.addStyle(
+        {chain: "B", within: {distance: 4.0, sel: binder}},
+        {stick: {color: "#247bb5", radius: 0.18}}
+      );
+    }
+
+    function showCartoon() {
+      viewer.removeAllSurfaces();
+      surfaceVisible = false;
+      viewer.setStyle({}, {});
+      viewer.setStyle(binder, {cartoon: {color: "#f5c84c"}});
+      viewer.setStyle(target, {cartoon: {color: "#32d5d2"}});
+      addInterface();
+      viewer.render();
+    }
+
+    function showSticks() {
+      viewer.removeAllSurfaces();
+      surfaceVisible = false;
+      viewer.setStyle({}, {});
+      viewer.setStyle(binder, {stick: {color: "#f5c84c", radius: 0.15}});
+      viewer.setStyle(target, {stick: {color: "#32d5d2", radius: 0.15}});
+      viewer.render();
+    }
+
+    function toggleSurface() {
+      if (surfaceVisible) {
+        showCartoon();
+        return;
+      }
+      viewer.removeAllSurfaces();
+      viewer.addSurface($3Dmol.SurfaceType.VDW, {color: "#f5c84c", opacity: 0.58}, binder);
+      viewer.addSurface($3Dmol.SurfaceType.VDW, {color: "#32d5d2", opacity: 0.42}, target);
+      surfaceVisible = true;
+      viewer.render();
+    }
+
+    function toggleSpin() {
+      spinning = !spinning;
+      viewer.spin(spinning ? "y" : false, 0.7);
+    }
+
+    function resetView() {
+      viewer.zoomTo();
+      viewer.render();
+    }
+
+    fetch("assets/1g13prot_complex.cif")
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.text();
+      })
+      .then(data => {
+        viewer.addModel(data, "cif");
+        showCartoon();
+        viewer.zoomTo();
+        viewer.render();
+        document.getElementById("status").textContent = "结构已加载";
+      })
+      .catch(error => {
+        document.getElementById("status").textContent = `加载失败：${error.message}`;
+        console.error(error);
+      });
+  </script>
+</body>
+</html>
