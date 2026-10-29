@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -109,9 +109,9 @@
       <button type="button" onclick="showCartoon()">Cartoon</button>
       <button type="button" onclick="showSticks()">Sticks</button>
       <button type="button" onclick="toggleSurface()">Surface</button>
-      <button type="button" onclick="toggleSpin()">旋转 / 停止</button>
-      <button type="button" onclick="resetView()">复位</button>
-      <a class="button" href="assets/1g13prot_complex.cif" download>下载 CIF</a>
+      <button type="button" onclick="toggleSpin()">Spin / Pause</button>
+      <button type="button" onclick="resetView()">Reset</button>
+      <a class="button" href="assets/1g13prot_complex.cif" download>Download CIF</a>
       <a class="button" href="https://github.com/OliverWang0908/02741">GitHub</a>
     </div>
   </header>
@@ -119,11 +119,11 @@
   <main id="viewer" aria-label="Interactive molecular structure"></main>
 
   <footer>
-    <span class="legend"><span class="swatch binder"></span>Binder：链 A，110 aa</span>
-    <span class="legend"><span class="swatch target"></span>Target：链 B，162 aa</span>
+    <span class="legend"><span class="swatch binder"></span>Binder: chain A, 110 aa</span>
+    <span class="legend"><span class="swatch target"></span>Target: chain B, 162 aa</span>
     <span class="legend"><span class="swatch interface"></span>4 Å interface</span>
-    <span class="help">左拖旋转 · 滚轮缩放 · 右拖平移</span>
-    <span id="status">正在加载结构…</span>
+    <span class="help">Left-drag to rotate · Scroll to zoom · Right-drag to pan</span>
+    <span id="status">Loading structure…</span>
   </footer>
 
   <script>
@@ -199,10 +199,10 @@
         showCartoon();
         viewer.zoomTo();
         viewer.render();
-        document.getElementById("status").textContent = "结构已加载";
+        document.getElementById("status").textContent = "Structure loaded";
       })
       .catch(error => {
-        document.getElementById("status").textContent = `加载失败：${error.message}`;
+        document.getElementById("status").textContent = `Load failed: ${error.message}`;
         console.error(error);
       });
   </script>
